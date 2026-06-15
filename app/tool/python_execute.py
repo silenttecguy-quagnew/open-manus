@@ -1,10 +1,8 @@
 import multiprocessing
 import sys
 from io import StringIO
-from typing import Dict
-
-from app.tool.base import BaseTool
-
+from typing import Dict, Union
+from app.tool.base import BaseTool, ToolResult
 
 class PythonExecute(BaseTool):
     """A tool for executing Python code with timeout and safety restrictions."""
@@ -40,7 +38,7 @@ class PythonExecute(BaseTool):
         self,
         code: str,
         timeout: int = 5,
-    ) -> Dict:
+    ) -> Union[Dict, ToolResult]:
         """
         Executes the provided Python code with a timeout.
 
@@ -49,7 +47,7 @@ class PythonExecute(BaseTool):
             timeout (int): Execution timeout in seconds.
 
         Returns:
-            Dict: Contains 'output' with execution output or error message and 'success' status.
+            ToolResult: Contains execution output or error message.
         """
 
         with multiprocessing.Manager() as manager:
@@ -68,8 +66,10 @@ class PythonExecute(BaseTool):
             if proc.is_alive():
                 proc.terminate()
                 proc.join(1)
-                return {
-                    "observation": f"Execution timeout after {timeout} seconds",
-                    "success": False,
-                }
-            return dict(result)
+                return ToolResult(error=f"Execution timeout after {timeout} seconds")
+
+            res = dict(result)
+            if res["success"]:
+                return ToolResult(output=res["observation"])
+            else:
+                return ToolResult(error=res["observation"])
