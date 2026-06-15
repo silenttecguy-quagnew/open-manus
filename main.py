@@ -26,7 +26,7 @@ async def main():
 
     # Create and initialize Manus agent
     try:
-        agent = await Manus.create()
+        agent = Manus()
     except Exception as e:
         logger.error(f"Failed to initialize Elite Manus: {e}")
         return
